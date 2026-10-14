@@ -31,8 +31,17 @@ def IntrinsicCheck(read, gene, map_of_interest, seq_of_interest, config):
 
     while((current_must != None) and (current_must.getPos() <= end)):
         # query_has_must:               becomes True if 'must' amino/nucleic acid is found in query
-        # first_and_last_tuple_index:   see line 38 for comments
+        # first_and_last_tuple_index:   see line 49 for comments
         query_has_must = False
+
+        # The alignment-mapping state machine can leave gaps for certain indel/frameshift
+        # CIGAR patterns, so a 'Must' position within [begin, end] isn't guaranteed to be a key.
+        # Treat a missing entry the same as a mismatch: this read can't confirm wild-type here.
+        must_pos_key = current_must.getPos() - 1
+        if must_pos_key not in map_of_interest:
+            aligned_portion_has_all_musts = False
+            break
+
         first_and_last_tuple_index = [0,len(map_of_interest[current_must.getPos()-1]) - 1]
 
         for tuple_index, query_index in enumerate(map_of_interest[current_must.getPos()-1]):
